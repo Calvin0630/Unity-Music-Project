@@ -7,14 +7,12 @@ using System.Linq;
 
 public class TriadTest : Test {
     List<int> answerList;
-    System.Random rand;
 
     //answer is either "major" or "minor"
 
     // Use this for initialization
     public TriadTest () {
         answerList = new List<int>();
-        rand = new System.Random();
 
     }
    
@@ -48,8 +46,18 @@ public class TriadTest : Test {
 
 
     public override bool GuessAnswer(string guess) {
-        Debug.Log("you guessed: " + guess+". The answer is: "+answer);
         if (guess == answer) return true;
         else return false;
+    }
+    public override string GetAnswer() {
+        if(answer ==null) {
+            Debug.LogError("answer not set!!!");
+            return null;
+        }
+        return answer;
+    }
+
+    public override string GetFalseAnswer() {
+        throw new NotImplementedException();
     }
 }
