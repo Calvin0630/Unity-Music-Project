@@ -41,7 +41,7 @@ public class TriadTest : Test {
     }
 
     public override void PlayAnswer(MyProcess chuck) {
-        chuck.ExecuteCommand("chuck + PlayInterval.ck:70:.8:63:" + answerList.ElementAt(0) + ":" + answerList.ElementAt(1) + ":" + answerList.ElementAt(2));
+        chuck.ExecuteCommand("chuck + PlayInterval.ck:70:.8:63:" + answerList.ElementAt(0) + ":" + answerList.ElementAt(1) + ":" + answerList.ElementAt(2), false);
     }
 
 
