@@ -1,0 +1,3 @@
+SynthVolume 0.5
+LFOActive 0
+LFORate 0

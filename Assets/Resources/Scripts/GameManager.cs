@@ -1,61 +1,69 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using System;
 
 public class GameManager : MonoBehaviour {
 	MyProcess chuck;
-    public GameObject cubePrefab;
-    List<GameObject> cubes;
     System.Random rand;
+    float synthVolume;
+    int lfoActive;
+    //the oscillations per second of the lfo
+    float lfoRate;
 	// Use this for initialization
 	void Start () {
         rand = new System.Random();
         chuck = new MyProcess();
-		chuck.ExecuteCommand("chuck + virtual_keyboard.ck:70:.5:76", false);
-		chuck.ExecuteCommand("chuck + sampler.ck:70:.5:76", false);
-        cubes = new List<GameObject>();
-        InstantiateBalls();
-        NaudioDemo nadio = new NaudioDemo();
-
-
-	}
+		chuck.ExecuteCommand("chuck + Main.ck:70:.5:76", false);
+        StartCoroutine(UpdateChuckVariables());
+        synthVolume = 0.5f;
+        //start the audio visualization
+    }
 
 	// Update is called once per frame
+    //this changhes the cubes
 	void Update () {
-        for (int i=0;i<cubes.Count;i++) {
-            cubes[i].transform.localScale= new Vector3(1, 20 *Mathf.Tan(Mathf.PI-(Mathf.PI/2)*Mathf.Abs(Mathf.Sin(Time.time)))* Mathf.Sin( (.005f*i) +Time.time)* Mathf.Sin((.009f * i) + 1/2*Time.time), 1);
-        }
+        
 	}
-
-    //the camera is at the origin looking down the +ve z direction
-    void InstantiateBalls() {
-        //spawns the balls in a partial circle centered around the origin
-        //r=20 from theta = pi/4-3pi/4 where 0 is the x axis (to the right)
-        //the roatation of each consecutive cube is .05 from the origin
-        float r = 1000;
-        Debug.Log(Mathf.Asin(r / .5f));
-        float deltaRotation = Mathf.Asin(.5f / r);
-        float startingRotation = Mathf.PI / 4;
-        float endingRotation= 3*Mathf.PI/4;
-        float currentRotation = startingRotation;
-        int k = 0;
-        //a loop to spawn the cubes and adds them to the cubes list
-        while (currentRotation<=endingRotation) {
-
-            Vector3 position = new Vector3(r*Mathf.Cos(currentRotation),0,r*Mathf.Sin(currentRotation) ); ;
-            GameObject tmp = Instantiate(cubePrefab, position, Quaternion.identity);
-            tmp.transform.SetParent(gameObject.transform);
-            cubes.Add(tmp);
-            currentRotation += deltaRotation;
-            k++;
+    //writes the value of chuck variables into the file settings.txt
+    IEnumerator UpdateChuckVariables () {
+        //variables are:
+        Dictionary<String, object> variables = new Dictionary<string, object>() {
+            {"SynthVolume", synthVolume },
+            {"LFOActive", lfoActive },
+            {"LFORate", lfoRate }
+        };
+        using (System.IO.StreamWriter file =
+           new System.IO.StreamWriter(@"C:\Users\Calvin\Documents\Github\Music Project\Assets\Resources\settings.txt")) {
+            foreach (KeyValuePair<string, object> pair in variables) {
+                // If the line doesn't contain the word 'Second', write the line to the file.
+                String line = pair.Key+" "+pair.Value;
+                file.WriteLine(line);
+                
+            }
         }
-        Debug.Log(k + " cubes would be made");
+        yield return new WaitForSeconds(.5f);
+        StartCoroutine(UpdateChuckVariables());
 
     }
 
-	void OnApplicationQuit()
-    {
+    public void SetSynthVolume(float volume) {
+        synthVolume = volume;
+    }
+    public void SetLFOActive(bool active) {
+        //not active
+        if (active) lfoActive = 1;
+        //active
+        else lfoActive = 0;
+    }
+    public void setLFORate(float rate) {
+        lfoRate = rate;
+    }
+    //the camera is at the origin looking down the +ve z direction
+    
+
+	void OnApplicationQuit() {
 		chuck.Close();
 		UnityEngine.Debug.Log("Application ending after " + Time.time + " seconds");
     }
