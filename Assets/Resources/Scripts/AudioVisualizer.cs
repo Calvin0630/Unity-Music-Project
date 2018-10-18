@@ -15,14 +15,26 @@ public class AudioVisualizer : MonoBehaviour {
     AudioCapture aCapture;
     public GameObject cubePrefab;
     List<GameObject> cubes;
+    MeshFilter meshFilter;
+    MeshRenderer meshRenderer;
+    Mesh mesh;
+    //used for the mesh
+    Vector3[] verts;
+    int[] tris;
+    Vector2[] uvs;
 
     WasapiCapture capture = new WasapiLoopbackCapture();
     // Use this for initialization
     void Start () {
-        cubes = new List<GameObject>();
-        InstantiateBlocks();
-        aCapture = gameObject.GetComponent<AudioCapture>();
+        meshFilter = gameObject.AddComponent<MeshFilter>() as MeshFilter;
+        meshRenderer = gameObject.AddComponent<MeshRenderer>() as MeshRenderer;
+        mesh = meshFilter.mesh;
+        meshRenderer.material.color = Color.green;
+        verts = new Vector3[4096 * 4];
+        uvs = new Vector2[4096 * 4];
+        tris = new int[4096 * 6];
 
+        aCapture = gameObject.GetComponent<AudioCapture>();
         capture.Initialize();
         // Get our capture as a source
         IWaveSource source = new SoundInSource(capture);
@@ -33,11 +45,11 @@ public class AudioVisualizer : MonoBehaviour {
 
         // Since this is being changed on a seperate thread we do this to be safe
         lock (aCapture.barData) {
-            SetCubeSizes(aCapture.barData);
+            DrawMesh(aCapture.barData);
 
         }
     }
-
+    /*
     void InstantiateBlocks() {
         //spawns the balls in a partial circle centered around the origin
         //r=20 from theta = pi/4-3pi/4 where 0 is the x axis (to the right)
@@ -73,7 +85,51 @@ public class AudioVisualizer : MonoBehaviour {
             Vector3 oldScale = cubes[i].transform.localScale;
             cubes[i].transform.localScale = new Vector3(oldScale.x, 500*data[i], oldScale.z);
         }
+    }
+    */
+    public void DrawMesh(float[] data) {
+        if (data.Length != 4096) {
+            Debug.LogError("Expected data length to be 4096!!!@!#34%%$#@");
+            return;
+        }
+        //verts, tris and uvs are arrays to store mesh info. they are already allocated
 
+        float zDistance=1000;
+        //setting verts
+        //size: 4*4096
+        float max = 0;
+        float scaleValue = 500;
+        for (int i=0;i<4096;i++) {
+            if (data[i] > max) max = data[i];
+            //top left
+            verts[4 * i] = new Vector3(0.5f*i-1024, scaleValue*data[i],zDistance);
+            //top right
+            verts[4 * i + 1] = new Vector3(0.5f * i + 0.5f - 1024, scaleValue*data[i], zDistance);
+            //bottom left
+            verts[4 * i + 2] = new Vector3(0.5f*i - 1024, -scaleValue*data[i], zDistance);
+            //bottom right
+            verts[4 * i + 3] = new Vector3(0.5f*i + 0.5f - 1024, -scaleValue*data[i], zDistance);
+        }
+        Debug.Log("Max: " + max);
+        //seting uvs
+        //size:4*4096
+        for (int i=0;i<4096*4;i++) {
+            uvs[i] = Vector2.zero;
+        }
+
+        //setting tris
+        //size: 6*4096
+        for (int i=0;i<4096;i++) {
+            tris[6 * i] = 4 * i;
+            tris[6 * i + 1] = 4 * i + 1;
+            tris[6 * i + 2] = 4 * i + 3;
+            tris[6 * i + 3] = 4 * i;
+            tris[6 * i + 4] = 4 * i + 3;
+            tris[6 * i + 5] = 4 * i + 2;
+        }
+        mesh.vertices = verts;
+        mesh.triangles = tris;
+        mesh.uv = uvs;
 
     }
     public void StartCapturingSound() {

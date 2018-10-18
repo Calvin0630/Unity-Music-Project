@@ -64,6 +64,7 @@ public class GameManager : MonoBehaviour {
     
 
 	void OnApplicationQuit() {
+        chuck.ExecuteCommand("chuck --removeall", false);
 		chuck.Close();
 		UnityEngine.Debug.Log("Application ending after " + Time.time + " seconds");
     }
