@@ -4,8 +4,8 @@ using UnityEngine;
 public class MouseLook : MonoBehaviour {
     public float mouseSensitivity = 100.0f;
     public float clampAngle = 80.0f;
-    public bool disableXRotation;
-    public bool disableYRotation;
+    public bool enableXRotation;
+    public bool enableYRotation;
 
     private float rotY = 0.0f; // rotation around the up/y axis
     private float rotX = 0.0f; // rotation around the right/x axis
@@ -19,9 +19,9 @@ public class MouseLook : MonoBehaviour {
     void Update() {
         float mouseX;
         float mouseY;
-        if (!disableXRotation) mouseX = Input.GetAxis("Mouse X");
+        if (enableXRotation) mouseX = Input.GetAxis("Mouse X");
         else mouseX = 0;
-        if (!disableYRotation) mouseY = Input.GetAxis("Mouse X");
+        if (enableYRotation) mouseY = Input.GetAxis("Mouse X");
         else mouseY = 0;
 
         rotY += mouseX * mouseSensitivity * Time.deltaTime;

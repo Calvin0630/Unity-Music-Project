@@ -22,6 +22,7 @@ public class AudioVisualizer : MonoBehaviour {
     Vector3[] verts;
     int[] tris;
     Vector2[] uvs;
+    Material backgroundMat;
 
     WasapiCapture capture = new WasapiLoopbackCapture();
     // Use this for initialization
@@ -29,10 +30,12 @@ public class AudioVisualizer : MonoBehaviour {
         meshFilter = gameObject.AddComponent<MeshFilter>() as MeshFilter;
         meshRenderer = gameObject.AddComponent<MeshRenderer>() as MeshRenderer;
         mesh = meshFilter.mesh;
-        meshRenderer.material.color = Color.green;
         verts = new Vector3[4096 * 4];
         uvs = new Vector2[4096 * 4];
         tris = new int[4096 * 6];
+        backgroundMat = Resources.Load("Material/FourierMaterial") as Material;
+        Debug.Log(backgroundMat == null);
+        meshRenderer.material = backgroundMat;
 
         aCapture = gameObject.GetComponent<AudioCapture>();
         capture.Initialize();
@@ -49,44 +52,7 @@ public class AudioVisualizer : MonoBehaviour {
 
         }
     }
-    /*
-    void InstantiateBlocks() {
-        //spawns the balls in a partial circle centered around the origin
-        //r=20 from theta = pi/4-3pi/4 where 0 is the x axis (to the right)
-        //the roatation of each consecutive cube is .05 from the origin
-        int ballCount = 4096;
-        //There should be 4096 balls between the two angle below. Angle is from camera perspective.
-        //balls have a thickness of 1 unit;
 
-        //stating from the right
-        float startingRotation = Mathf.PI / 4;
-        //ending on the left
-        float endingRotation = 3 * Mathf.PI / 4;
-        float deltaRotation = (endingRotation-startingRotation)/4096;
-        float currentRotation = startingRotation;
-        float boxWidth = .1f;
-        float r = boxWidth / Mathf.Tan(deltaRotation);
-        //a loop to spawn the cubes and adds them to the cubes list
-        while (currentRotation <= endingRotation) {
-            Vector3 position = new Vector3(r * Mathf.Cos(currentRotation), 0, r * Mathf.Sin(currentRotation)); ;
-            GameObject tmp = Instantiate(cubePrefab, position, Quaternion.identity);
-            tmp.transform.localScale = new Vector3(1, boxWidth, 1);
-            tmp.transform.SetParent(gameObject.transform);
-            cubes.Add(tmp);
-            currentRotation += deltaRotation;
-        }
-    }
-
-    //expects the array size to be 4096
-    void SetCubeSizes(float[] data) {
-        if (data.Length != 4096) Debug.LogError("Expected an array of size 4096?@?@");
-        for (int i = 0;i<data.Length;i++) {
-            //hold the old position. So it can keep track of x and z whick dont change, only y
-            Vector3 oldScale = cubes[i].transform.localScale;
-            cubes[i].transform.localScale = new Vector3(oldScale.x, 500*data[i], oldScale.z);
-        }
-    }
-    */
     public void DrawMesh(float[] data) {
         if (data.Length != 4096) {
             Debug.LogError("Expected data length to be 4096!!!@!#34%%$#@");
@@ -110,12 +76,23 @@ public class AudioVisualizer : MonoBehaviour {
             //bottom right
             verts[4 * i + 3] = new Vector3(0.5f*i + 0.5f - 1024, -scaleValue*data[i], zDistance);
         }
-        Debug.Log("Max: " + max);
+        //Debug.Log("Max: " + max);
         //seting uvs
         //size:4*4096
-        for (int i=0;i<4096*4;i++) {
-            uvs[i] = Vector2.zero;
+        //need to translate the domain of 0,0 - 1,1 into world space
+        //ie -yMax,0 - yMax, 4096
+        float yMax = zDistance  * Mathf.Tan(Mathf.PI*Camera.main.fieldOfView/(180*2));
+        for (int i=0;i<4096;i++) {
+            uvs[4*i] = new Vector2((float)i/4096, scaleValue*data[i]/yMax) ;
+            uvs[4 * i + 1] = new Vector2((float)i / 4096, scaleValue*data[i] / yMax);
+            uvs[4 * i + 2] = new Vector2((float)i / 4096, -scaleValue*data[i] / yMax);
+            uvs[4 * i + 3] = new Vector2((float)i / 4096, -scaleValue*data[i] / yMax);
         }
+        Vector2 maxUV = Vector2.zero;
+        for (int i=0;i<uvs.Length;i++) {
+            if (uvs[i].magnitude > maxUV.magnitude) maxUV = uvs[i];
+        }
+
 
         //setting tris
         //size: 6*4096
@@ -130,6 +107,9 @@ public class AudioVisualizer : MonoBehaviour {
         mesh.vertices = verts;
         mesh.triangles = tris;
         mesh.uv = uvs;
+
+        mesh.RecalculateNormals();
+        mesh.RecalculateTangents();
 
     }
     public void StartCapturingSound() {

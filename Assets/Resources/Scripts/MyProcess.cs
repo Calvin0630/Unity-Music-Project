@@ -20,7 +20,7 @@ public class MyProcess  {
         startInfo.RedirectStandardError = false;
         startInfo.UseShellExecute = false;
         startInfo.WindowStyle = ProcessWindowStyle.Minimized;
-        startInfo.CreateNoWindow = false;
+        startInfo.CreateNoWindow = true;
 
         main.StartInfo = startInfo;
 		main.Start();
