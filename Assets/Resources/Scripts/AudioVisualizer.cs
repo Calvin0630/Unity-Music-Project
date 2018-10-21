@@ -23,6 +23,11 @@ public class AudioVisualizer : MonoBehaviour {
     int[] tris;
     Vector2[] uvs;
     Material backgroundMat;
+    int dataSize;
+    float[] gaussianKernel;
+    public int gaussianKernelSize;
+    public float gaussianKernelStdDev;
+    public float gaussianKernelAlpha;
 
     WasapiCapture capture = new WasapiLoopbackCapture();
     // Use this for initialization
@@ -34,13 +39,15 @@ public class AudioVisualizer : MonoBehaviour {
         uvs = new Vector2[4096 * 4];
         tris = new int[4096 * 6];
         backgroundMat = Resources.Load("Material/FourierMaterial") as Material;
-        Debug.Log(backgroundMat == null);
         meshRenderer.material = backgroundMat;
+        gaussianKernel = Convoluter.GetGaussian(gaussianKernelSize, gaussianKernelStdDev, gaussianKernelAlpha);
 
         aCapture = gameObject.GetComponent<AudioCapture>();
         capture.Initialize();
         // Get our capture as a source
         IWaveSource source = new SoundInSource(capture);
+        
+        dataSize = 4096;
     }
 	
 	// Update is called once per frame
@@ -54,27 +61,48 @@ public class AudioVisualizer : MonoBehaviour {
     }
 
     public void DrawMesh(float[] data) {
+        float zDistance = 1000;
         if (data.Length != 4096) {
             Debug.LogError("Expected data length to be 4096!!!@!#34%%$#@");
             return;
         }
+        float scaleFactor = 500;
+        //some processing and gaussian smoothing for looks
+        for (int i=0;i<data.Length;i++) { 
+            data[i] *= scaleFactor;
+        }
+        gaussianKernel = Convoluter.GetGaussian(gaussianKernelSize, gaussianKernelStdDev, gaussianKernelAlpha);
+        data = Convoluter.Convolve(gaussianKernel, data);
+        
+        //after convolving with gaussian the data must be normalized to fit on the screen
+        //start by finding the biggest value in the array
+        float max = 0;
+        for (int i=0;i<data.Length;i++) {
+            if (data[i] > max) max = data[i];
+        }
+        //if the max value is off the screen
+        float highestVisibleYValue = zDistance * Mathf.Tan(Mathf.PI*Camera.main.fieldOfView/(180*2));
+        //Debug.Log(highestVisibleYValue);
+        if (max>highestVisibleYValue) {
+            scaleFactor = highestVisibleYValue / max;
+            for (int i = 0; i < data.Length; i++) {
+                data[i] *= scaleFactor;
+            }
+        }
+        
         //verts, tris and uvs are arrays to store mesh info. they are already allocated
 
-        float zDistance=1000;
         //setting verts
         //size: 4*4096
-        float max = 0;
-        float scaleValue = 500;
         for (int i=0;i<4096;i++) {
-            if (data[i] > max) max = data[i];
             //top left
-            verts[4 * i] = new Vector3(0.5f*i-1024, scaleValue*data[i],zDistance);
+            verts[4 * i] = new Vector3(0.5f*i-1024, data[i],zDistance);
             //top right
-            verts[4 * i + 1] = new Vector3(0.5f * i + 0.5f - 1024, scaleValue*data[i], zDistance);
+            verts[4 * i + 1] = new Vector3(0.5f * i + 0.5f - 1024, data[i], zDistance);
             //bottom left
-            verts[4 * i + 2] = new Vector3(0.5f*i - 1024, -scaleValue*data[i], zDistance);
+            verts[4 * i + 2] = new Vector3(0.5f*i - 1024, -data[i], zDistance);
             //bottom right
-            verts[4 * i + 3] = new Vector3(0.5f*i + 0.5f - 1024, -scaleValue*data[i], zDistance);
+            verts[4 * i + 3] = new Vector3(0.5f*i + 0.5f - 1024, -data[i], zDistance);
         }
         //Debug.Log("Max: " + max);
         //seting uvs
@@ -83,10 +111,10 @@ public class AudioVisualizer : MonoBehaviour {
         //ie -yMax,0 - yMax, 4096
         float yMax = zDistance  * Mathf.Tan(Mathf.PI*Camera.main.fieldOfView/(180*2));
         for (int i=0;i<4096;i++) {
-            uvs[4*i] = new Vector2((float)i/4096, scaleValue*data[i]/yMax) ;
-            uvs[4 * i + 1] = new Vector2((float)i / 4096, scaleValue*data[i] / yMax);
-            uvs[4 * i + 2] = new Vector2((float)i / 4096, -scaleValue*data[i] / yMax);
-            uvs[4 * i + 3] = new Vector2((float)i / 4096, -scaleValue*data[i] / yMax);
+            uvs[4*i] = new Vector2((float)i/4096, data[i]/yMax) ;
+            uvs[4 * i + 1] = new Vector2((float)i / 4096, data[i] / yMax);
+            uvs[4 * i + 2] = new Vector2((float)i / 4096, -data[i] / yMax);
+            uvs[4 * i + 3] = new Vector2((float)i / 4096, -data[i] / yMax);
         }
         Vector2 maxUV = Vector2.zero;
         for (int i=0;i<uvs.Length;i++) {

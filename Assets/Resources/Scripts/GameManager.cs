@@ -11,6 +11,7 @@ public class GameManager : MonoBehaviour {
     int lfoActive;
     //the oscillations per second of the lfo
     float lfoRate;
+    public GameObject SynthPanel, LooperPanel;
 	// Use this for initialization
 	void Start () {
         rand = new System.Random();
@@ -63,7 +64,15 @@ public class GameManager : MonoBehaviour {
     //the camera is at the origin looking down the +ve z direction
     
 
-	void OnApplicationQuit() {
+    public void SetSynthPanelActive(bool b) {
+        SynthPanel.SetActive(b);
+    }
+
+    public void SetLooperPanelActive(bool b) {
+        LooperPanel.SetActive(b);
+    }
+
+    void OnApplicationQuit() {
         chuck.ExecuteCommand("chuck --removeall", false);
 		chuck.Close();
 		UnityEngine.Debug.Log("Application ending after " + Time.time + " seconds");
