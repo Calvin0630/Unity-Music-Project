@@ -8,7 +8,8 @@ using System.IO;
 public class MyProcess  {
 	Process main;
 	StreamWriter input;
-	List<Process> processList = new List<Process>();
+    //
+	public List<Process> processList = new List<Process>();
 
 	public MyProcess() {
 		main = new Process();
@@ -20,30 +21,27 @@ public class MyProcess  {
         startInfo.RedirectStandardError = false;
         startInfo.UseShellExecute = false;
         startInfo.WindowStyle = ProcessWindowStyle.Minimized;
-        startInfo.CreateNoWindow = true;
+        startInfo.CreateNoWindow = false;
 
         main.StartInfo = startInfo;
 		main.Start();
 	}
 
-	public string ExecuteCommand(String command, bool getOutput) {
-        if (!getOutput) {
-            Process tmp = new Process();
-            processList.Add(tmp);
-            ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.FileName = "chuck";
-            //startInfo.Arguments = "/min "+command;
-            startInfo.Arguments = command;
-            startInfo.WindowStyle = ProcessWindowStyle.Minimized;
-            tmp.StartInfo = startInfo;
-            tmp.Start();
-            return "";
-        }
-        else if (getOutput) {
-            return "";
-        }
-        return "";
+	public void ExecuteCommand(String command) {
+        Process tmp = new Process();
+        processList.Add(tmp);
+        ProcessStartInfo startInfo = new ProcessStartInfo();
+        startInfo.FileName = "chuck";
+        //startInfo.Arguments = "/min "+command;
+        startInfo.Arguments = command;
+        startInfo.WindowStyle = ProcessWindowStyle.Minimized;
+        tmp.StartInfo = startInfo;
+        tmp.Start();
 	}
+    //shred name is the name of the shred including file extension
+    public void RemoveShred(string shredName) {
+        //remove a shred with the above name
+    }
 	// Use this for initialization
 	public void Close () {
         main.CloseMainWindow();

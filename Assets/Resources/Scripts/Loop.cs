@@ -2,15 +2,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Loop : MonoBehaviour {
-
-	// Use this for initialization
-	void Start () {
-		
-	}
+public class Loop {
+    //each loop should have a unique id. 
+    int id;
+    string fileName;
+    string nickName;
 	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+    public Loop(int id) {
+
+    }
+
+    public void Record() {
+
+    }
+    public void togglePlaying() {
+
+    }
 }

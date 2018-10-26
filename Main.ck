@@ -1,5 +1,52 @@
 private class Main {
-    //Gain[8]@=>Gain[] channels;
+    //prints key.which
+    fun void debug_printKeyNum() {
+
+        // which keyboard
+        0 => int device;
+        // HID
+        Hid hi;
+        HidMsg msg;
+        // open keyboard (get device number from command line)
+        if( !hi.openKeyboard( device ) ) me.exit();
+        // infinite event loop
+        while( true ){
+            // wait for event
+            hi => now;
+
+            // get message
+            while( hi.recv( msg ) ) {
+                if (msg.isButtonDown()) {
+                    <<<msg.which,"">>>;
+                }
+
+                    80::ms => now;
+            }
+        }
+    }
+    fun void exitOnEsc() {
+        // which keyboard
+        0 => int device;
+        // HID
+        Hid hi;
+        HidMsg msg;
+        // open keyboard (get device number from command line)
+        if( !hi.openKeyboard( device ) ) me.exit();
+        // infinite event loop
+        while( true ){
+            // wait for event
+            hi => now;
+
+            // get message
+            while( hi.recv( msg ) ) {
+                if (msg.isButtonDown()) {
+                    if(msg.which==1)Machine.remove(1);
+                }
+
+                    80::ms => now;
+            }
+        }
+    }
 }
 //recommended args: (bpm, gain, rootNote)
 //arguements separated by a colon
@@ -31,22 +78,27 @@ fun void wait(float duration) {
 
 
 // patch
-Gain midiIn=>PRCRev reverb=>Echo echo=>Gain finalVolume=>dac;
-(beat/2)::second=>echo.delay;
-.5=>echo.mix;
+Gain midiIn=>PRCRev reverb=>Gain finalVolume=>dac;
 1=>midiIn.gain;
 .2=>reverb.mix;
 volume=>finalVolume.gain;
 MidiOscillator mOsc;
-mOsc.init(midiIn, bpm, 1, rootNote);
 Sampler sam;
-sam.init(finalVolume, bpm, volume, rootNote);
+//initialize settingReader first so settings get read first
 SettingsReader reader;
 reader.init(mOsc, sam);
+
+
+mOsc.init(midiIn, bpm, 1, rootNote);
+sam.init(finalVolume, bpm, volume, rootNote);
+Main main;
+//spork~main.debug_printKeyNum();
+spork~main.exitOnEsc();
 
 while (true) {
     10::second=>now;
 }
+
 //spork~mOsc.debug();
 
 //a class to parse settings.txt to update volume, lfoDepth, etc.
@@ -86,18 +138,22 @@ private class SettingsReader {
                 if (variableName=="SynthVolume") {
                     synth.setVolume(Std.atof(variableValue));
                 }
-                else if (variableName=="LFOActive") {
-                    synth.setLFOActive(Std.atoi(variableValue));
+                else if (variableName=="attack") {
+                    Std.atof(variableValue)=>synth.attack;
                 }
-                else if (variableName=="LFORate") {
-                    synth.setLFORate(Std.atof(variableValue));
+                else if (variableName=="delay") {
+                    Std.atof(variableValue)=>synth.delay;
+                }
+                else if (variableName=="sustain") {
+                    Std.atof(variableValue)=>synth.sustain;
+                }
+                else if (variableName=="release") {
+                    Std.atof(variableValue)=>synth.release;
                 }
             }
             .1::second=>now;
         }
     }
-
-
 }
 
 private class MidiOscillator {
@@ -114,16 +170,16 @@ private class MidiOscillator {
     //a sin osc for each midi note
     SinOsc oscillators[128];
     //an adsr filter for each note
-    //ADSR adsr;
+    //finalEnvolope used to be an adsr and proceeds preADSR which is why it is named that way
     ADSR preAdsr[128];
+    Envelope finalEnvelope;
     Gain audioSource;
     Gain phaseOne;
-    //lfoRate (hertz)
-    1=>float lfoRate;
-    1=>float lfoDepth;
-    SinOsc lfo;
-    1=>int lfoActive;
+    //height is the center of oscillation sin(0) = lfoHeight
+    float lfoHeight;
+    int lfoActive;
     Gain gain;
+    float attack, delay, sustain, release;
     //a list of all the active notes
     IntArray activeNotes;
 
@@ -134,48 +190,42 @@ private class MidiOscillator {
         60/(bpm_ $ float) => beat;
         volume_ => volume;
         rootNote_ => rootNote;
-
+        //audioSource=>phaseOne=>finalEnvelope=>gain=>output;
         audioSource=>phaseOne=>gain=>output;
-        lfo=>phaseOne;
-        phaseOne.op(3);
-        if (lfoActive==1) lfo=>phaseOne;
-        lfoDepth=>lfo.gain;
-        lfoRate=>lfo.freq;
-        //lfoThree=>phaseOne;
-        //lfoTwo=>phaseOne;
         volume => gain.gain;
+        if (volume==0)<<<"VOLUME IS ZERO","">>>;
         //an array of adsr settings: AttackTime, DelayTime, Sustain, Release
-        [beat/2, beat, beat/8, beat/8] @=> float adsrSettings[];
+        [beat/2, beat, beat/8, beat/8] @=> float preAdsrSettings[];
         //adsr.set(adsrSettings[0]::second, adsrSettings[1]::second, adsrSettings[2], adsrSettings[3]::second);
 
         //instantiate the elements in the the array
         for (0=>int i;i<oscillators.cap();i++) {
             oscillators[i] =>preAdsr[i]=> audioSource;
             //apply setting to the adsr
-            preAdsr[i].set(adsrSettings[0]::second, adsrSettings[1]::second, adsrSettings[2], adsrSettings[3]::second);
             Std.mtof(i) => oscillators[i].freq;
             1 => oscillators[i].gain;
 
         }
+        //listens for key presses to play notes
         spork~listenForEvents();
+        //sets adsr values every 20 ms
+        spork~setADSR();
     }
     //a function to set the volume
     fun void setVolume(float _volume) {
         _volume=>volume;
         volume=>gain.gain;
     }
-    fun void setLFOActive(int active) {
-        //1 is true, 0 is false
-        if (active==1) {
-            lfo=>phaseOne;
+    //uses public variables to change the value instead of passing the var in the func
+    fun void setADSR() {
+        if (sustain ==0)<<<"Sustain is zero!! you wont get any sound from the Osc","">>>;
+        <<<"ADSR: ",attack, " ", delay," ", sustain, " ", release>>>;
+        for (0=>int i;i<preAdsr.cap();i++) {
+            preAdsr[i].set(attack::second, delay::second, sustain, release::second);
         }
-        else if (active==0) {
-            lfo=<phaseOne;
-        }
-    }
-    fun void setLFORate(float rate_) {
-        rate_=>lfoRate;
-        lfoRate=>lfo.freq;
+
+        .2::second=>now;
+        setADSR();
     }
     //a function for debugging
     fun void listenForEvents() {
@@ -255,7 +305,7 @@ private class MidiOscillator {
             activeNotes.add(notes[i]);
             preAdsr[rootNote+notes[i]].keyOn();
         }
-        //adsr.keyOn();
+        //if (activeNotes.size()>0)finalEnvelope.keyOn();
         activeNotes.print();
         (1/(activeNotes.size()$float))=>audioSource.gain;
     }
@@ -265,9 +315,11 @@ private class MidiOscillator {
             activeNotes.remove(notes[i]);
             preAdsr[rootNote+notes[i]].keyOff();
         }
-        //adsr.keyOff();
+        if (activeNotes.size() == 0) {
+            //finalEnvelope.keyOff();
+        }
         activeNotes.print();
-        (1/(activeNotes.size()$float))=>audioSource.gain;
+        (1/(activeNotes.size()+1)$float)=>audioSource.gain;
     }
 
     fun void wait(float duration) {

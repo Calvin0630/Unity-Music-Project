@@ -38,7 +38,7 @@ public class IntervalTest : Test {
     }
 
     public override void PlayAnswer(MyProcess chuck) {
-        chuck.ExecuteCommand("chuck + PlayInterval.ck:70:.8:63:0:"+intervalStrings.IndexOf(answer), false);
+        chuck.ExecuteCommand("chuck + PlayInterval.ck:70:.8:63:0:"+intervalStrings.IndexOf(answer));
     }
 
     public override string GetAnswer() {

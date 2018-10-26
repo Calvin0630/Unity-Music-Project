@@ -1,3 +1,5 @@
-SynthVolume 0.5
-LFOActive 0
-LFORate 0
+SynthVolume 0.43
+attack 0
+delay 0
+sustain 0.681
+release 0

@@ -29,6 +29,7 @@ public class AudioVisualizer : MonoBehaviour {
     public float gaussianKernelStdDev;
     public float gaussianKernelAlpha;
 
+
     WasapiCapture capture = new WasapiLoopbackCapture();
     // Use this for initialization
     void Start () {
@@ -63,7 +64,7 @@ public class AudioVisualizer : MonoBehaviour {
     public void DrawMesh(float[] data) {
         float zDistance = 1000;
         if (data.Length != 4096) {
-            Debug.LogError("Expected data length to be 4096!!!@!#34%%$#@");
+            //Debug.LogError("Expected data length to be 4096!!!@!#34%%$#@");
             return;
         }
         float scaleFactor = 500;

@@ -5,20 +5,23 @@ using UnityEngine.UI;
 using System;
 
 public class GameManager : MonoBehaviour {
-	MyProcess chuck;
+	public MyProcess chuck;
     System.Random rand;
     float synthVolume;
     int lfoActive;
+    float attack, delay, sustain, release;
     //the oscillations per second of the lfo
     float lfoRate;
     public GameObject SynthPanel, LooperPanel;
-	// Use this for initialization
-	void Start () {
-        rand = new System.Random();
+    private void Awake() {
         chuck = new MyProcess();
-		chuck.ExecuteCommand("chuck + Main.ck:70:.5:76", false);
+
+    }
+    // Use this for initialization
+    void Start () {
+        rand = new System.Random();
+		chuck.ExecuteCommand("chuck + Main.ck:70:.5:76");
         StartCoroutine(UpdateChuckVariables());
-        synthVolume = 0.5f;
         //start the audio visualization
     }
 
@@ -27,13 +30,16 @@ public class GameManager : MonoBehaviour {
 	void Update () {
         
 	}
+    
     //writes the value of chuck variables into the file settings.txt
     IEnumerator UpdateChuckVariables () {
-        //variables are:
-        Dictionary<String, object> variables = new Dictionary<string, object>() {
+        //chuck variables are stored here:
+        Dictionary<string, object> variables = new Dictionary<string, object>() {
             {"SynthVolume", synthVolume },
-            {"LFOActive", lfoActive },
-            {"LFORate", lfoRate }
+            {"attack", attack },
+            {"delay", delay },
+            {"sustain", sustain },
+            {"release", release }
         };
         using (System.IO.StreamWriter file =
            new System.IO.StreamWriter(@"C:\Users\Calvin\Documents\Github\Music Project\Assets\Resources\settings.txt")) {
@@ -58,11 +64,22 @@ public class GameManager : MonoBehaviour {
         //active
         else lfoActive = 0;
     }
-    public void setLFORate(float rate) {
+    public void SetLFORate(float rate) {
         lfoRate = rate;
     }
-    //the camera is at the origin looking down the +ve z direction
-    
+    public void SetAttack(float attack_) {
+        attack = attack_;
+    }
+    public void SetDelay(float delay_) {
+        delay = delay_;
+    }
+    public void SetSustain(float sustain_) {
+        sustain = sustain_;
+    }   
+    public void SetRelease(float release_) {
+        release = release_;
+    }
+
 
     public void SetSynthPanelActive(bool b) {
         SynthPanel.SetActive(b);
@@ -73,7 +90,7 @@ public class GameManager : MonoBehaviour {
     }
 
     void OnApplicationQuit() {
-        chuck.ExecuteCommand("chuck --removeall", false);
+        chuck.ExecuteCommand("chuck --removeall");
 		chuck.Close();
 		UnityEngine.Debug.Log("Application ending after " + Time.time + " seconds");
     }
