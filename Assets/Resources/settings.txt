@@ -3,3 +3,5 @@ attack 0
 delay 0
 sustain 0.681
 release 0
+reverbActive 1
+reverbMix 0

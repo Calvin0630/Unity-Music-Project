@@ -150,6 +150,12 @@ private class SettingsReader {
                 else if (variableName=="release") {
                     Std.atof(variableValue)=>synth.release;
                 }
+                else if (variableName=="reverbActive") {
+                    synth.setReverbActive(Std.atof(variableValue));
+                }
+                else if (variableName=="reverbMix") {
+                    synth.setReverbMix(Std.atof(variableValue));
+                }
             }
             .1::second=>now;
         }
@@ -175,11 +181,10 @@ private class MidiOscillator {
     Envelope finalEnvelope;
     Gain audioSource;
     Gain phaseOne;
-    //height is the center of oscillation sin(0) = lfoHeight
-    float lfoHeight;
-    int lfoActive;
+    NRev reverb;
     Gain gain;
     float attack, delay, sustain, release;
+    float reverbActive;
     //a list of all the active notes
     IntArray activeNotes;
 
@@ -219,13 +224,32 @@ private class MidiOscillator {
     //uses public variables to change the value instead of passing the var in the func
     fun void setADSR() {
         if (sustain ==0)<<<"Sustain is zero!! you wont get any sound from the Osc","">>>;
-        <<<"ADSR: ",attack, " ", delay," ", sustain, " ", release>>>;
+        //<<<"ADSR: ",attack, " ", delay," ", sustain, " ", release>>>;
         for (0=>int i;i<preAdsr.cap();i++) {
             preAdsr[i].set(attack::second, delay::second, sustain, release::second);
         }
 
         .2::second=>now;
         setADSR();
+    }
+    //im using a float as a boolean cause im dumb
+    fun void setReverbActive(float f) {
+        if (f!=reverbActive) {
+            if (f==0) {
+                <<<"disconnecting","">>>;
+                phaseOne=<reverb;
+                reverb=<gain;
+                phaseOne=>gain;
+            }
+            else if (f==1) {
+                phaseOne=<gain;
+                phaseOne=>reverb=>gain;
+            }
+        }
+        f=>reverbActive;
+    }
+    fun void setReverbMix(float f) {
+        f=>reverb.mix;
     }
     //a function for debugging
     fun void listenForEvents() {
