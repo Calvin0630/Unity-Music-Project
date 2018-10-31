@@ -12,6 +12,9 @@ public class GameManager : MonoBehaviour {
     float attack, delay, sustain, release;
     float reverbActive;
     float reverbMix;
+    float delayTime, delayMax;
+    int delayActive;
+    int synthRootNote;
     //the oscillations per second of the lfo
     float lfoRate;
     public GameObject SynthPanel, LooperPanel;
@@ -44,6 +47,10 @@ public class GameManager : MonoBehaviour {
             {"release", release },
             {"reverbActive", reverbActive },
             {"reverbMix", reverbMix },
+            {"delayActive", delayActive },
+            {"delayTime", delayTime },
+            {"delayMax", delayMax },
+            {"synthRootNote", synthRootNote },
         };
         using (System.IO.StreamWriter file =
            new System.IO.StreamWriter(@"C:\Users\Calvin\Documents\Github\Music Project\Assets\Resources\settings.txt")) {
@@ -90,6 +97,21 @@ public class GameManager : MonoBehaviour {
     public void SetReverbMix(float f) {
         reverbMix = f;
     }
+    public void SetDelayActive(bool b) {
+        if (b) delayActive = 1;
+        else delayActive = 0;
+    }
+    public void SetDelayTime(float f) {
+        delayTime = f;
+    }
+    public void SetDelayMax(float f) {
+        delayMax = f;
+    }
+    public void SetSynthRootNote(string rootNote) {
+        synthRootNote = int.Parse(rootNote);
+    }
+
+
 
 
     public void SetSynthPanelActive(bool b) {

@@ -92,15 +92,34 @@ reader.init(mOsc, sam);
 mOsc.init(midiIn, bpm, 1, rootNote);
 sam.init(finalVolume, bpm, volume, rootNote);
 Main main;
-//spork~main.debug_printKeyNum();
 spork~main.exitOnEsc();
 
 while (true) {
     10::second=>now;
 }
 
-//spork~mOsc.debug();
+private class EffectsChain {
+    UGen effects[];
+    fun void init(UGen input, UGen output) {
 
+    }
+    fun void add(UGen t){
+        if (effects.cap()==0) {
+            [t]@=> effects;
+        }
+        else {
+            effects@=>UGen tmp[];
+        }
+    }
+
+    fun void remove() {
+
+    }
+}
+private class Effect{
+    string name;
+    UGen generator;
+}
 //a class to parse settings.txt to update volume, lfoDepth, etc.
 private class SettingsReader {
     MidiOscillator synth;
@@ -151,10 +170,22 @@ private class SettingsReader {
                     Std.atof(variableValue)=>synth.release;
                 }
                 else if (variableName=="reverbActive") {
-                    synth.setReverbActive(Std.atof(variableValue));
+                    synth.setReverbActive(Std.atoi(variableValue));
                 }
                 else if (variableName=="reverbMix") {
                     synth.setReverbMix(Std.atof(variableValue));
+                }
+                else if (variableName=="delayActive") {
+                    synth.setDelayActive(Std.atoi(variableValue));
+                }
+                else if (variableName=="delayTime") {
+                    synth.setDelayTime(Std.atof(variableValue));
+                }
+                else if (variableName=="delayMax") {
+                    synth.setDelayMax(Std.atof(variableValue));
+                }
+                else if (variableName=="synthRootNote") {
+                    synth.setRootNote(Std.atoi(variableValue));
                 }
             }
             .1::second=>now;
@@ -181,10 +212,11 @@ private class MidiOscillator {
     Envelope finalEnvelope;
     Gain audioSource;
     Gain phaseOne;
-    NRev reverb;
+    NRev reverbEffect;
+    Delay delayEffect;
     Gain gain;
     float attack, delay, sustain, release;
-    float reverbActive;
+    int reverbActive, delayActive;
     //a list of all the active notes
     IntArray activeNotes;
 
@@ -233,7 +265,7 @@ private class MidiOscillator {
         setADSR();
     }
     //im using a float as a boolean cause im dumb
-    fun void setReverbActive(float f) {
+    fun void setReverbActive(int f) {
         if (f!=reverbActive) {
             if (f==0) {
                 <<<"disconnecting","">>>;
@@ -251,6 +283,29 @@ private class MidiOscillator {
     fun void setReverbMix(float f) {
         f=>reverb.mix;
     }
+    fun void setRootNote(int rootNote_) {
+        if (rootNote==rootNote_) return;
+        else {
+            rootNote_=>rootNote;
+            for (0=>int i;i<oscillators.cap();i++) {
+                //apply setting to the adsr
+                Std.mtof(i) => oscillators[i].freq;
+                1 => oscillators[i].gain;
+
+            }
+        }
+    }
+
+    fun void setDelayActive(int active) {
+        if (delayActive==1){
+
+        }
+        else if (delayActive==0) {
+
+        }
+    }
+    fun void setDelayTime(float delayTime){}
+    fun void setDelayMax(float delayMax){}
     //a function for debugging
     fun void listenForEvents() {
         // which keyboard
@@ -343,7 +398,8 @@ private class MidiOscillator {
             //finalEnvelope.keyOff();
         }
         activeNotes.print();
-        (1/(activeNotes.size()+1)$float)=>audioSource.gain;
+        if (activeNotes.size()>1) (1/(activeNotes.size()+1)$float)=>audioSource.gain;
+        else 1=>audioSource.gain;
     }
 
     fun void wait(float duration) {
@@ -591,7 +647,6 @@ private class Sampler {
             2/=>duration;
         }
     }
-
 }
 
 
