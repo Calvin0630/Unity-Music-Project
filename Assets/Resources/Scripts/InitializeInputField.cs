@@ -9,8 +9,8 @@ public class InitializeInputField : MonoBehaviour {
 	void Start () {
         InputField input = gameObject.GetComponent<InputField>();
         string text = input.text;
-        input.text = "";
-        input.text = text;
+
+        input.onEndEdit.Invoke(text);
 	}
 	
 	// Update is called once per frame

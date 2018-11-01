@@ -30,18 +30,20 @@ public class Dial : MonoBehaviour, IPointerUpHandler, IPointerDownHandler {
         while (true) {
             float theta; 
             yield return new WaitForSeconds(0.01f);
-            float yAxis = Input.GetAxis("Mouse Y");
-            if (magnitude + yAxis > max || magnitude + yAxis < min) continue;
+            float mouseY = Input.GetAxis("Mouse Y");
+            if (magnitude + mouseY > max || magnitude + mouseY < min) continue;
             //floating point is imprecise
-            else if (yAxis - min < 0.1) {
-                magnitude += yAxis;
+            else if (mouseY - min > 0.1||mouseY - min < -0.1) {
+                magnitude += mouseY;
                 valueChangeEvent.Invoke(magnitude);
-                //yAxis (0-100), domain of rotation (0-300)
+                //magnitude (0-100), domain of rotation (0-300)
                 //THE angle of rotation of the dial
                 //magnitude(min-max) theta (0-300)
-                theta = -300*(yAxis - min)/ (max - min);
-                Debug.Log("magnitude: "+magnitude+" |theta: "+theta);
-                gameObject.GetComponent<RectTransform>().rotation = new Quaternion(theta, 1, 0, 0);
+                theta = 300*(mouseY - min)/ (max - min);
+                Debug.Log("mouseY: "+mouseY+" magnitude: "+magnitude+" |theta: "+theta);
+#pragma warning disable CS0618 // Type or member is obsolete
+                gameObject.GetComponent<RectTransform>().RotateAroundLocal(new Vector3(0, 0, 1), theta);
+#pragma warning restore CS0618 // Type or member is obsolete
             }
 
         }

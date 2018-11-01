@@ -3,9 +3,9 @@ attack 0
 delay 0
 sustain 0.681
 release 0
-reverbActive 1
+reverbActive 0
 reverbMix 0
 delayActive 1
 delayTime 0
 delayMax 0
-synthRootNote 0
+synthRootNote 62

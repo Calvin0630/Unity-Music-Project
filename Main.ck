@@ -287,6 +287,7 @@ private class MidiOscillator {
         if (rootNote==rootNote_) return;
         else {
             rootNote_=>rootNote;
+            <<<"rootNote is now: ",rootNote>>>;
             for (0=>int i;i<oscillators.cap();i++) {
                 //apply setting to the adsr
                 Std.mtof(i) => oscillators[i].freq;
