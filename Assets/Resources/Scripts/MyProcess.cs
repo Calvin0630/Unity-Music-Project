@@ -6,7 +6,7 @@ using System;
 using System.IO;
 
 public class MyProcess  {
-	Process main;
+	public Process main;
 	StreamWriter input;
     //
 	public List<Process> processList = new List<Process>();
@@ -22,6 +22,7 @@ public class MyProcess  {
         startInfo.UseShellExecute = false;
         startInfo.WindowStyle = ProcessWindowStyle.Minimized;
         startInfo.CreateNoWindow = false;
+        //startInfo.CreateNoWindow = true;
 
         main.StartInfo = startInfo;
 		main.Start();

@@ -25,7 +25,10 @@ public class GameManager : MonoBehaviour {
     // Use this for initialization
     void Start () {
         rand = new System.Random();
-		chuck.ExecuteCommand("chuck + Main.ck:70:.5:76");
+        chuck.ExecuteCommand("chuck --status");
+        chuck.ExecuteCommand("chuck --status");
+        chuck.ExecuteCommand("chuck + Chuck_Scripts//Main.ck:70:.5:76");
+        chuck.ExecuteCommand("chuck --status");
         StartCoroutine(UpdateChuckVariables());
         //start the audio visualization
     }
