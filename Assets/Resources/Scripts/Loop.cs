@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Loop {
-    string name;
+    public string name;
 	
     public Loop(string name_) {
         name = name_;

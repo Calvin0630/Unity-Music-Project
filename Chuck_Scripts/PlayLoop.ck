@@ -33,6 +33,7 @@ else {
     // ensure it's ok
     if( !fout.good() ) {
         cherr <= "can't open file: " <= fileName <= " for reading..." <= IO.newline();
+        5::second=>now;
         me.exit();
     }
 

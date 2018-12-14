@@ -45,6 +45,7 @@ public class MyProcess  {
     }
 	// Use this for initialization
 	public void Close () {
+        ExecuteCommand("chuck --removeall");
         main.CloseMainWindow();
 	}
 
