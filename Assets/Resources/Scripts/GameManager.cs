@@ -7,6 +7,8 @@ using System;
 public class GameManager : MonoBehaviour {
 	public MyProcess chuck;
     System.Random rand;
+    //chuck synthVariablesare stored here:
+    Dictionary<string, object> synthVariables;
     float synthVolume;
     int lfoActive;
     float attack, delay, sustain, release;
@@ -25,12 +27,26 @@ public class GameManager : MonoBehaviour {
     // Use this for initialization
     void Start () {
         rand = new System.Random();
+        synthVariables = new Dictionary<string, object>() {
+            {"SynthVolume", synthVolume },
+            {"attack", attack },
+            {"delay", delay },
+            {"sustain", sustain },
+            {"release", release },
+            {"reverbActive", reverbActive },
+            {"reverbMix", reverbMix },
+            {"delayActive", delayActive },
+            {"delayTime", delayTime },
+            {"delayMax", delayMax },
+            {"synthRootNote", synthRootNote },
+        };
         chuck.ExecuteCommand("chuck --status");
         chuck.ExecuteCommand("chuck --status");
         chuck.ExecuteCommand("chuck + Chuck_Scripts//Main.ck:70:.5:76");
         chuck.ExecuteCommand("chuck --status");
         StartCoroutine(UpdateChuckVariables());
         InitChuckVariables();
+        printSynthVars();
     }
 
 	// Update is called once per frame
@@ -38,57 +54,49 @@ public class GameManager : MonoBehaviour {
 	void Update () {
         //Debug.Log(chuck.GetOutput());
 	}
+
+    // a function to read the variables from settings.txt on start
     public void InitChuckVariables() {
-        Dictionary<string, object> variables = new Dictionary<string, object>() {
-            {"SynthVolume", synthVolume },
-            {"attack", attack },
-            {"delay", delay },
-            {"sustain", sustain },
-            {"release", release },
-            {"reverbActive", reverbActive },
-            {"reverbMix", reverbMix },
-            {"delayActive", delayActive },
-            {"delayTime", delayTime },
-            {"delayMax", delayMax },
-            {"synthRootNote", synthRootNote },
-        };
         using (System.IO.StreamReader file = new System.IO.StreamReader(@"C:\Users\Calvin\Documents\Github\Music Project\Assets\Resources\settings.txt")) {
-            string line;
-            do {
+            string line = file.ReadLine();
+            while (line != null) {
+                //Debug.Log("line==null " + (line == null));
+                //Debug.Log("line: \""+line+"\"");
+                string[] words = line.Split(' ');
+                if (words.Length == 2) {
+                    synthVariables[words[0]] = int.Parse(words[1]);
+                    Debug.Log(words[0] + " | " + words[1]);
+                }
                 line = file.ReadLine();
-                Debug.Log(line);
             }
-            while (line != null);
         }
     }
 
-    //writes the value of chuck variables into the file settings.txt
+    //writes the value of chuck synthVariablesinto the file settings.txt
     IEnumerator UpdateChuckVariables () {
-        //chuck variables are stored here:
-        Dictionary<string, object> variables = new Dictionary<string, object>() {
-            {"SynthVolume", synthVolume },
-            {"attack", attack },
-            {"delay", delay },
-            {"sustain", sustain },
-            {"release", release },
-            {"reverbActive", reverbActive },
-            {"reverbMix", reverbMix },
-            {"delayActive", delayActive },
-            {"delayTime", delayTime },
-            {"delayMax", delayMax },
-            {"synthRootNote", synthRootNote },
-        };
-        using (System.IO.StreamWriter file =
-           new System.IO.StreamWriter(@"C:\Users\Calvin\Documents\Github\Music Project\Assets\Resources\settings.txt")) {
-            foreach (KeyValuePair<string, object> pair in variables) {
-                // If the line doesn't contain the word 'Second', write the line to the file.
-                String line = pair.Key+" "+pair.Value;
-                file.WriteLine(line);
-                
+        if (SynthPanel.activeSelf == true) {
+            using (System.IO.StreamWriter file =
+               new System.IO.StreamWriter(@"C:\Users\Calvin\Documents\Github\Music Project\Assets\Resources\settings.txt")) {
+                foreach (KeyValuePair<string, object> pair in synthVariables) {
+                    //write the line to the file.
+                    String line = pair.Key + " " + pair.Value;
+                    file.WriteLine(line);
+
+                }
             }
         }
         yield return new WaitForSeconds(.5f);
         StartCoroutine(UpdateChuckVariables());
+    }
+    //a debug fn that prints synth vars
+    public void printSynthVars() {
+        Debug.Log("Synth Variables: ");
+        foreach (KeyValuePair<string, object> pair in synthVariables) {
+            //write the line to the file.
+            String line = pair.Key + " " + pair.Value;
+            Debug.Log(line);
+
+        }
 
     }
 

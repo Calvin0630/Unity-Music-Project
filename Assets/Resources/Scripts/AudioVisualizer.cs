@@ -18,6 +18,13 @@ public class AudioVisualizer : MonoBehaviour {
     MeshFilter meshFilter;
     MeshRenderer meshRenderer;
     Mesh mesh;
+    //an array that stores the most recent version of fourier data
+    float[] fourierData;
+    //a set of variables used to detect if the fourier data mesh has been updated.
+    //their indices that they represent in the fourierData[] are 0,dataSize.length/2, and dataSize.Length-1
+    float beginOfFourierData, middleOfFourierData, endOfFourierData;
+    //a second set of vars to hold the previous frame's info to detect change
+    float beginOfFourierData_old, middleOfFourierData_old, endOfFourierData_old;
     //used for the mesh
     public int dataRowCount;
     List<float> dataQueue;
@@ -25,6 +32,7 @@ public class AudioVisualizer : MonoBehaviour {
     int[] tris;
     Vector2[] uvs;
     Material backgroundMat;
+    //dataSize is the number of floats in one sample of fourierData
     int dataSize;
     float[] gaussianKernel;
     public int gaussianKernelSize;
@@ -58,14 +66,15 @@ public class AudioVisualizer : MonoBehaviour {
         // Get our capture as a source
         IWaveSource source = new SoundInSource(capture);
         frameCounter = 0;
-
+        
     }
 	
 	// Update is called once per frame
 	void Update () {
+        float startTime = 1000 * Time.time;
         //to keep track of the frame
-        Debug.Log("frame: " + frameCounter);
-        if (frameCounter > 5) {
+        //Debug.Log("frame: " + frameCounter);
+        if (frameCounter > 50) {
             //Debug.Log("Pause");
             //Debug.Break();
         }
@@ -73,13 +82,38 @@ public class AudioVisualizer : MonoBehaviour {
 
         // Since this is being changed on a seperate thread we do this to be safe
         lock (aCapture.barData) {
-            DrawMesh(aCapture.barData);
+            fourierData= aCapture.barData;
 
         }
+        if (fourierData != null) {
+            DrawMesh(fourierData);
+        }
+        /*
+        if (fourierData != null) {
+            float startTime = Time.time;
+            //check for change in fouier data
+            beginOfFourierData = fourierData[0];
+            middleOfFourierData = fourierData[fourierData.Length / 2];
+            endOfFourierData = fourierData[fourierData.Length - 1];
+            //check if they are different from the previous frames values
+
+
+            //
+            beginOfFourierData_old = beginOfFourierData;
+            middleOfFourierData = middleOfFourierData_old;
+            endOfFourierData = endOfFourierData_old;
+            float endTime = Time.time;
+            Debug.Log("The data took " + (endTime - startTime) + " to capture");
+            Debug.Log("start time: " + startTime + "end time: " + endTime);
+        }
+        */
+        float endTime = 1000 * Time.time;
+        Debug.Log("It took " + (endTime - startTime) + " for one frame to execute");
+        Debug.Log("start time: " + startTime + "end time: " + endTime);
     }
 
     public void DrawMesh(float[] data) {
-        Debug.Log("data.Length" + data.Length);
+        //Debug.Log("data.Length" + data.Length);
         if (data.Length != 512) {
             Debug.LogError("Expected data length to be 512!!!@!#34%%$#@");
             return;
@@ -105,7 +139,6 @@ public class AudioVisualizer : MonoBehaviour {
         
         gaussianKernel = Convoluter.GetGaussian(gaussianKernelSize, gaussianKernelStdDev, gaussianKernelAlpha);
         data = Convoluter.Convolve(gaussianKernel, data);
-        
         //after convolving with gaussian the data must be normalized to fit on the screen
         //start by finding the biggest value in the array
         max = 0;
@@ -157,11 +190,11 @@ public class AudioVisualizer : MonoBehaviour {
                     //Debug.Log("dataSize * (activeRowCount-i-1) + j: " + (dataSize * (activeRowCount - i-1) + j));
                     float yValue = dataQueue[dataSize * (activeRowCount - i - 1) + j];
 
-                    verts[dataSize * i + j] = new Vector3(j, yValue, i);
+                    verts[dataSize * i + j] = new Vector3(j, yValue, 10*i);
                 }
                 else {
                     //otherwise set y to 0
-                    verts[dataSize * i + j] = new Vector3(j, 0, i);
+                    verts[dataSize * i + j] = new Vector3(j, 0, 10*i);
                 }
             }
         }
@@ -216,6 +249,7 @@ public class AudioVisualizer : MonoBehaviour {
 
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
+        
 
     }
     public void StartCapturingSound() {
