@@ -26,23 +26,23 @@ public class LoopScroller : MonoBehaviour {
 	void Update () {
 		
 	}
-
-    public void AddList(List<string> list) {
-        foreach(string s in list) {
-            AddElement(s);
-        }
-    }
-    public void AddElement(string name) {
+    public void AddElement(string name, bool isPlaying) {
         GameObject tmp = Instantiate(loopIconPrefab);
         tmp.transform.SetParent(contentPane);
         float loopButtonHeight = 0;
         RectTransform tmpRect = tmp.GetComponent<RectTransform>();
+        //set the Variables of the taggle
         foreach (Transform t in tmp.transform) {
+            //set the main image size
             if (t.gameObject.name == "Image") {
                 loopButtonHeight = t.gameObject.GetComponent<RectTransform>().rect.height;
             }
+            //add a listener to the Play button
             else if (t.gameObject.name =="PlayToggle") {
-                t.onValueChanged.AddListener(loopy.GetComponent<Looper>().ToggleLoopPlaying(name));
+                t.GetComponent<Toggle>().isOn = isPlaying;
+                t.GetComponent<Toggle>().onValueChanged.AddListener(delegate {
+                    loopy.GetComponent<Looper>().ToggleLoopPlaying(name);
+                });
             }
         }
         tmp.GetComponentInChildren<Text>().text = name;
@@ -52,5 +52,13 @@ public class LoopScroller : MonoBehaviour {
         tmpRect.anchoredPosition = new Vector2( 0,
             -0.5f*scrollRectHeight+  (loopy.loopList.Count-1) * (loopButtonHeight+10));
         loopIconList.Add(tmp);
+    }
+    public GameObject GetElement(string name) {
+        foreach (GameObject obj in loopIconList) {
+            if (obj.name==name) {
+                return obj;
+            }
+        }
+        return null;
     }
 }

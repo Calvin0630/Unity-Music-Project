@@ -88,6 +88,14 @@ if(me.args() == 3) {
     Std.atof(me.arg(1)) => volume;
     Std.atoi(me.arg(2)) => rootNote;
 }
+else if (me.args()==0) {
+    <<<"Using default arguments","">>>;
+    70=>bpm;
+    60/(bpm $ float)=>beat;
+    0.5=>volume;
+    55=>rootNote;
+
+}
 else {
     <<<"Fix your args","">>>;
     <<<"","Expected: bpm:volume:rootNote">>>;

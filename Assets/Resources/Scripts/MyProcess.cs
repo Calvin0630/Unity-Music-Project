@@ -26,8 +26,13 @@ public class MyProcess  {
 
         main.StartInfo = startInfo;
 		main.Start();
-	}
+    }
 
+    public string GetOutput() {
+        string line = "";
+        if (!main.StandardOutput.EndOfStream) line = main.StandardOutput.ReadLine();
+        return line;
+    }
 	public void ExecuteCommand(String command) {
         Process tmp = new Process();
         processList.Add(tmp);

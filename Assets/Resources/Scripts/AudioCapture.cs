@@ -7,10 +7,9 @@ using CSCore.Streams;
 using WinformsVisualization.Visualization;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class AudioCapture : MonoBehaviour {
-    int numBars = 4096;
+    public int numBars = 512;
 
     public int minFreq = 5;
     public int maxFreq = 4500;
@@ -46,7 +45,8 @@ public class AudioCapture : MonoBehaviour {
         // From https://github.com/filoe/cscore/blob/master/Samples/WinformsVisualization/Form1.cs
 
         // This is the typical size, you can change this for higher detail as needed
-        fftSize = FftSize.Fft4096;
+        //fftSize = FftSize.Fft4096;
+        fftSize = FftSize.Fft512;
 
         // Actual fft data
         fftBuffer = new float[(int)fftSize];

@@ -1,10 +1,11 @@
 //This script starts playing a loop and write the name of the file followed by the shred ID that is playing it to ActiveLoops.txt
-if (me.args()<1)<<<"not enough args","">>>;
+if (me.args()!=1)<<<"not enough args","">>>;
 else {
-    <<<me.arg(0),"">>>;
+    <<<"Opening: ",me.arg(0),"\".wav\"">>>;
+    <<<"Current Directory: ",me.dir()>>>;
     me.arg(0)=>string name;
     //first read the contents of ActiveLoops.txt
-    "ActiveLoops.txt"=>string fileName;
+    me.dir()+"/ActiveLoops.txt"=>string fileName;
     //read the contents into the following string then append the name and ShredID
     string fileText;
 
@@ -13,6 +14,7 @@ else {
     fin.open( fileName, FileIO.READ );
     // ensure it's ok
     if( !fin.good() ) {
+        5::second=> now;
         cherr <= "can't open file: " <= fileName <= " for reading..." <= IO.newline();
         me.exit();
     }

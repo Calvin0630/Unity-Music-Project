@@ -30,15 +30,38 @@ public class GameManager : MonoBehaviour {
         chuck.ExecuteCommand("chuck + Chuck_Scripts//Main.ck:70:.5:76");
         chuck.ExecuteCommand("chuck --status");
         StartCoroutine(UpdateChuckVariables());
-        //start the audio visualization
+        InitChuckVariables();
     }
 
 	// Update is called once per frame
     //this changhes the cubes
 	void Update () {
-        
+        //Debug.Log(chuck.GetOutput());
 	}
-    
+    public void InitChuckVariables() {
+        Dictionary<string, object> variables = new Dictionary<string, object>() {
+            {"SynthVolume", synthVolume },
+            {"attack", attack },
+            {"delay", delay },
+            {"sustain", sustain },
+            {"release", release },
+            {"reverbActive", reverbActive },
+            {"reverbMix", reverbMix },
+            {"delayActive", delayActive },
+            {"delayTime", delayTime },
+            {"delayMax", delayMax },
+            {"synthRootNote", synthRootNote },
+        };
+        using (System.IO.StreamReader file = new System.IO.StreamReader(@"C:\Users\Calvin\Documents\Github\Music Project\Assets\Resources\settings.txt")) {
+            string line;
+            do {
+                line = file.ReadLine();
+                Debug.Log(line);
+            }
+            while (line != null);
+        }
+    }
+
     //writes the value of chuck variables into the file settings.txt
     IEnumerator UpdateChuckVariables () {
         //chuck variables are stored here:
@@ -113,9 +136,6 @@ public class GameManager : MonoBehaviour {
     public void SetSynthRootNote(string rootNote) {
         synthRootNote = int.Parse(rootNote);
     }
-
-
-
 
     public void SetSynthPanelActive(bool b) {
         SynthPanel.SetActive(b);

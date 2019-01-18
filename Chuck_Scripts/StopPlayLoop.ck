@@ -5,7 +5,7 @@ else {
     me.arg(0)=>string name;
     int shreadToKill;
     //first read the contents of ActiveLoops.txt
-    "ActiveLoops.txt"=>string fileName;
+    me.dir()+"/ActiveLoops.txt"=>string fileName;
     //read the contents into the following string then append the name and ShredID
     string newFileText;
 
@@ -15,11 +15,13 @@ else {
     // ensure it's ok
     if( !fin.good() ) {
         cherr <= "can't open file: " <= fileName <= " for reading..." <= IO.newline();
+        5::second=>now;
         me.exit();
     }
     //read line by line
     while(fin.more()) {
         fin.readLine()=>string line;
+        if (line.length() ==0) continue;
         line.trim();
         line.find(" ")=>int spaceIndex;
         line.substring(0,spaceIndex)=>string loopName;

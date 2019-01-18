@@ -9,7 +9,7 @@ public class Looper : MonoBehaviour {
     public List<Loop> loopList;
     public GameObject gameManager;
     public GameObject loopScroller;
-    MyProcess chuck;
+    public MyProcess chuck;
     bool isRecording;
     bool isPlayingLoop;
     //a private variable that holds the index of the loop that will be recorded when the user starts recording
@@ -22,28 +22,25 @@ public class Looper : MonoBehaviour {
 
     }
     void Start () {
+        chuck = gameManager.GetComponent<GameManager>().chuck;
         loopList = new List<Loop>();
         //read existing loops from the loops folder
         string[] fileNames = ReadLoopsFromFolder();
         foreach (string s in fileNames) {
-            Loop loop = new Loop(s);
-            loopScroller.GetComponent<LoopScroller>().AddElement(loop.name);
+            Loop loop = new Loop(s, gameObject.GetComponent<Looper>());
+            loopScroller.GetComponent<LoopScroller>().AddElement(loop.name, false);
             loopList.Add(loop);
         }
         isRecording = false;
-        chuck = gameManager.GetComponent<GameManager>().chuck;
 	}
 	
 	// Update is called once per frame
 	void Update () {
 	}
     public void ToggleLoopPlaying(string name) {
-        Debug.Log(name);
-        Debug.Log("loopList==null   " + (loopList == null));
-        Debug.Log("LooplistCount: " + loopList.Count);
         foreach (Loop loop in loopList) {
             if (loop.name ==name) {
-                chuck.ExecuteCommand("chuck + Chuck_Scripts//PlayLoop:" + loop.name);
+                loop.TogglePlaying();
             }
         }
     }
@@ -54,7 +51,9 @@ public class Looper : MonoBehaviour {
             if (name == "") {
                 name = loopList.Count.ToString();
             }
-            Loop newLoop = new Loop(name);
+            //create the loop object and add it to loopList as well as add the UI element with LoopScroller
+            Loop newLoop = new Loop(name, gameObject.GetComponent<Looper>());
+            loopScroller.GetComponent<LoopScroller>().AddElement(name, true);
             loopList.Add(newLoop);
             chuck.ExecuteCommand("chuck + Chuck_Scripts//record.ck:"+name);
             isRecording = true;
@@ -62,6 +61,11 @@ public class Looper : MonoBehaviour {
         //if its already recording, set the state to not recording
         else {
             isRecording = false;
+            //start the loop playing after its been recorded
+            loopList[loopList.Count - 1].TogglePlaying();
+
+            //user must press tab for chuck to recognize the end of recording.
+            //this makes sense because the user wont have time to grab the mouse and click a button at the end of their loop
         }
     }
 
