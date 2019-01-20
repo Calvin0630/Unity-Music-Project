@@ -71,7 +71,7 @@ public class AudioVisualizer : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        float startTime = 1000 * Time.time;
+        
         //to keep track of the frame
         //Debug.Log("frame: " + frameCounter);
         if (frameCounter > 50) {
@@ -82,37 +82,24 @@ public class AudioVisualizer : MonoBehaviour {
 
         // Since this is being changed on a seperate thread we do this to be safe
         lock (aCapture.barData) {
+            Debug.Log("new fourier data!!");
             fourierData= aCapture.barData;
 
         }
         if (fourierData != null) {
+            float startTime = Time.realtimeSinceStartup;
             DrawMesh(fourierData);
+            float endTime = Time.realtimeSinceStartup;
+            Debug.Log("DrawMesh() took "+(endTime-startTime)+" seconds to execute.");
         }
-        /*
-        if (fourierData != null) {
-            float startTime = Time.time;
-            //check for change in fouier data
-            beginOfFourierData = fourierData[0];
-            middleOfFourierData = fourierData[fourierData.Length / 2];
-            endOfFourierData = fourierData[fourierData.Length - 1];
-            //check if they are different from the previous frames values
-
-
-            //
-            beginOfFourierData_old = beginOfFourierData;
-            middleOfFourierData = middleOfFourierData_old;
-            endOfFourierData = endOfFourierData_old;
-            float endTime = Time.time;
-            Debug.Log("The data took " + (endTime - startTime) + " to capture");
-            Debug.Log("start time: " + startTime + "end time: " + endTime);
-        }
-        */
-        float endTime = 1000 * Time.time;
-        Debug.Log("It took " + (endTime - startTime) + " for one frame to execute");
-        Debug.Log("start time: " + startTime + "end time: " + endTime);
+        
+        
+        //Debug.Log("Time.DeltaTime = "+Time.deltaTime);
+        
     }
 
     public void DrawMesh(float[] data) {
+        
         //Debug.Log("data.Length" + data.Length);
         if (data.Length != 512) {
             Debug.LogError("Expected data length to be 512!!!@!#34%%$#@");
@@ -238,6 +225,7 @@ public class AudioVisualizer : MonoBehaviour {
                 tris[i * 12 * (dataSize - 1) + 12 * j + 11] = (i + 1) * dataSize + j;
             }
         }
+        
         /*
             verts = new Vector3[dataSize * dataRowCount];
             uvs = new Vector2[dataSize * dataRowCount];
